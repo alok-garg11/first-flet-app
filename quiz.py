@@ -1,78 +1,60 @@
-import tkinter as tk
-from tkinter import messagebox
+import flet as ft
 
+# Define a question object
+class Question:
+  def __init__(self, text, choices, answer):
+    self.text = text
+    self.choices = choices
+    self.answer = answer
 
-class QuizApp:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("Quiz App")
+# Define some example questions
+questions = [
+  Question("What is the capital of France?", ["London", "Paris", "Berlin"], 1),
+  Question("What is the largest planet in our solar system?", ["Jupiter", "Mars", "Earth"], 0),
+]
 
-        self.questions = [
-            {
-                'question': "What is the capital of France?",
-                'options': ["Paris", "London", "Berlin", "Madrid"],
-                'correct_answer': "Paris"
-            },
-            {
-                'question': "Who wrote 'Hamlet'?",
-                'options': ["Shakespeare", "Dickens", "Hemingway", "Twain"],
-                'correct_answer': "Shakespeare"
-            },
-            {
-                'question': "What is the powerhouse of the cell?",
-                'options': ["Mitochondrion", "Nucleus", "Ribosome", "Endoplasmic reticulum"],
-                'correct_answer': "Mitochondrion"
-            }
-        ]
+# Track current question and score
+current_question = 0
+score = 0
 
-        self.current_question_idx = 0
-        self.score = 0
+def show_question(page: ft.Page):
+  global current_question
 
-        self.question_label = tk.Label(master, text="")
-        self.question_label.pack(pady=10)
+  # Clear previous content
+  page.clean()
+  # Display question text
+  page.add(ft.Text(questions[current_question].text))
 
-        self.radio_var = tk.IntVar()
-        self.radio_buttons = []
-        for idx in range(4):
-            radio_button = tk.Radiobutton(master, text="", variable=self.radio_var, value=idx)
-            self.radio_buttons.append(radio_button)
-            radio_button.pack(anchor=tk.W)
+  # Create radio buttons for choices
+  radio_buttons = []
+  for i, choice in enumerate(questions[current_question].choices):
+    radio_buttons.append(ft.RadioGroup(content=ft.Column([
+        ft.Radio(value=str(i),
+                 label=choice)]),
+      on_change=lambda e: check_answer(page, e.control.value)))
+  page.add(ft.Row(controls=radio_buttons))
 
-        self.next_button = tk.Button(master, text="Next", command=self.next_question)
-        self.next_button.pack(pady=10)
+def check_answer(page: ft.Page, choice):
+  global current_question, score
 
-        self.show_question()
+  # Check if selected answer matches correct answer
+  if int(choice) == questions[current_question].answer:
+    score += 1
+    page.add(ft.Text("Correct!"))
+  else:
+    page.add(ft.Text(f"Incorrect. The answer is {questions[current_question].choices[questions[current_question].answer]}"))
 
-    def show_question(self):
-        question = self.questions[self.current_question_idx]
-        self.question_label.config(text=question['question'])
-        for idx, option in enumerate(question['options']):
-            self.radio_buttons[idx].config(text=option)
-        self.radio_var.set(-1)
+  # Check if it's the last question
+  if current_question == len(questions) - 1:
+    page.add(ft.Text(f"You scored {score} out of {len(questions)}"))
+  else:
+    current_question += 1
+    show_question(page)
 
-    def next_question(self):
-        selected_index = self.radio_var.get()
-        if selected_index == -1:
-            messagebox.showwarning("Warning", "Please select an answer.")
-            return
+  # Update the page
+  page.update()
 
-        question = self.questions[self.current_question_idx]
-        correct_answer = question['correct_answer']
-        selected_answer = question['options'][selected_index]
+def main(page: ft.Page):
+  show_question(page)
 
-        if selected_answer == correct_answer:
-            self.score += 1
-
-        self.current_question_idx += 1
-
-        if self.current_question_idx < len(self.questions):
-            self.show_question()
-        else:
-            messagebox.showinfo("Quiz Complete", f"Quiz complete! You scored {self.score}/{len(self.questions)}")
-            self.master.destroy()
-
-
-# Create the main window
-root = tk.Tk()
-app = QuizApp(root)
-root.mainloop()
+ft.app(target=main)

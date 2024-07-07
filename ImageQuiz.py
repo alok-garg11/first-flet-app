@@ -2,15 +2,21 @@ import flet as ft
 
 # Define a question object
 class Question:
-  def __init__(self, text, choices, answer):
-    self.text = text
+  def __init__(self, image, choices, answer):
+    self.img = ft.Image(
+        src=image,
+        width=25,
+        height=25,
+        fit=ft.ImageFit.CONTAIN,
+    )
+    self.images = ft.Row(expand=1, wrap=True, scroll="always")
     self.choices = choices
     self.answer = answer
 
 # Define some example questions
 questions = [
-  Question("What is the capital of France?", ["London", "Paris", "Berlin"], 1),
-  Question("What is the largest planet in our solar system?", ["Jupiter", "Mars", "Earth"], 0),
+  Question(f"/images/cycle.PNG", ["Bus", "Train", "Cycle"], 2),
+  Question(f"/images/horse.PNG", ["Horse", "Tiger", "Cow"], 0),
 ]
 
 # Track current question and score
@@ -23,7 +29,7 @@ def show_question(page: ft.Page):
   # Clear previous content
   page.clean()
   # Display question text
-  page.add(ft.Text(questions[current_question].text))
+  page.add(questions[current_question].img, questions[current_question].images )
 
   # Create radio buttons for choices
   radio_buttons = []
